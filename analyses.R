@@ -1,6 +1,5 @@
-## Do some preliminary analyses of treatment evaluation as a function of 
-
-## TODO: get population density in/around the treated area!
+## Analyses of STS treatment success from Walter et al. (202X) in Pest Management Science
+## Contact: Jonathan Walter, jaw3es@virginia.edu
 
 rm(list=ls())
 
@@ -10,21 +9,22 @@ library(lubridate)
 library(car)
 library(ncf)
 library(betareg)
+library(rstudioapi)
 
-setwd("~/Box Sync/STS/TreatmentEvaluation")
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-eval07<-read.csv("TreatmentEvaluation_2007.csv", stringsAsFactors = F, na.strings="")
-eval08<-read.csv("TreatmentEvaluation_2008.csv", stringsAsFactors = F, na.strings="")
-eval09<-read.csv("TreatmentEvaluation_2009.csv", stringsAsFactors = F, na.strings="")
-eval10<-read.csv("TreatmentEvaluation_2010.csv", stringsAsFactors = F, na.strings="")
-eval11<-read.csv("TreatmentEvaluation_2011.csv", stringsAsFactors = F, na.strings="")
-eval12<-read.csv("TreatmentEvaluation_2012.csv", stringsAsFactors = F, na.strings="")
-eval13<-read.csv("TreatmentEvaluation_2013.csv", stringsAsFactors = F, na.strings="")
-eval14<-read.csv("TreatmentEvaluation_2014.csv", stringsAsFactors = F, na.strings="")
-eval15<-read.csv("TreatmentEvaluation_2015.csv", stringsAsFactors = F, na.strings="")
-eval16<-read.csv("TreatmentEvaluation_2016.csv", stringsAsFactors = F, na.strings="")
-eval17<-read.csv("TreatmentEvaluation_2017.csv", stringsAsFactors = F, na.strings="")
-eval18<-read.csv("TreatmentEvaluation_2018.csv", stringsAsFactors = F, na.strings="")
+eval07<-read.csv("./data/TreatmentEvaluation_2007.csv", stringsAsFactors = F, na.strings="")
+eval08<-read.csv("./data/TreatmentEvaluation_2008.csv", stringsAsFactors = F, na.strings="")
+eval09<-read.csv("./data/TreatmentEvaluation_2009.csv", stringsAsFactors = F, na.strings="")
+eval10<-read.csv("./data/TreatmentEvaluation_2010.csv", stringsAsFactors = F, na.strings="")
+eval11<-read.csv("./data/TreatmentEvaluation_2011.csv", stringsAsFactors = F, na.strings="")
+eval12<-read.csv("./data/TreatmentEvaluation_2012.csv", stringsAsFactors = F, na.strings="")
+eval13<-read.csv("./data/TreatmentEvaluation_2013.csv", stringsAsFactors = F, na.strings="")
+eval14<-read.csv("./data/TreatmentEvaluation_2014.csv", stringsAsFactors = F, na.strings="")
+eval15<-read.csv("./data/TreatmentEvaluation_2015.csv", stringsAsFactors = F, na.strings="")
+eval16<-read.csv("./data/TreatmentEvaluation_2016.csv", stringsAsFactors = F, na.strings="")
+eval17<-read.csv("./data/TreatmentEvaluation_2017.csv", stringsAsFactors = F, na.strings="")
+eval18<-read.csv("./data/TreatmentEvaluation_2018.csv", stringsAsFactors = F, na.strings="")
 
 eval.all<-rbind(eval07,eval08,eval09,eval10,eval11,eval12,eval13,eval14,eval15,eval16,
                 eval17,eval18)
@@ -39,7 +39,7 @@ eval.all$stblk<-paste(eval.all$State,eval.all$Blockname,sep="-")
 
 rm(eval07,eval08,eval09,eval10,eval11,eval12,eval13,eval14,eval15,eval16,eval17,eval18)
 
-trtshp<-readOGR("treatments_plus.shp", stringsAsFactors = F)
+trtshp<-readOGR("./data/treatments_plus.shp", stringsAsFactors = F)
 trtinf<-trtshp@data
 trtinf<-trtinf[,colnames(trtinf) %in% c("OBJECTI","ACRES","ID","BLOCKNA","DOSAGE","PPA","STATE","YEAR",
                                         "TREATME","DATE_TR","DISCANC","rh100","pai","trpctch_v","trpctch_m",
@@ -51,7 +51,7 @@ trtinf$stblk<-paste(trtinf$STATE,trtinf$BLOCKNA,sep="-")
 # trthostba<-aggregate(trthostba$hostba~trthostba$stblk, FUN="mean", na.rm=T)
 # colnames(trthostba)<-c("stblk","hostba")
 
-trt_ppa<-read.csv("treatment_ppas_join.csv", stringsAsFactors = F)
+trt_ppa<-read.csv("./data/treatment_ppas_join.csv", stringsAsFactors = F)
 trt_ppa<-trt_ppa[,colnames(trt_ppa) %in% c("BLOCKNAME","STATE","PRIORITY_I","RECOMMEND")]
 trt_ppa$stblk<-paste(trt_ppa$STATE,trt_ppa$BLOCKNAME,sep="-")
 #trt_ppa$PRIORITY_I[is.na(trt_ppa$PRIORITY_I)]<-0
@@ -115,13 +115,8 @@ table(eval.first$State)
 eval.first<-eval.first[eval.first$Treatment != "MIM" & eval.first$Treatment != "MIM-MD",]# & eval.first$Treatment != "DIM",]
 eval.first<-eval.first[eval.first$State != "TN",]
 
-# lm.Ta<-glm(Ta ~ State + Treatment + DistanceKm + Acres + TreatYearFact + 
-#              hostba + PRIORITY_I, data=eval.first, family=binomial(link=logit), na.action="na.fail")
-# hist(lm.Ta$residuals)
-# anova(lm.Ta,test="LRT") 
-# summary(lm.Ta)
 
-write.csv(eval.first$stblk,"studied_treatments_list.csv")
+#write.csv(eval.first$stblk,"studied_treatments_list.csv")
 
 eval.first$Ta[eval.first$Ta==1]<-1-1e-5
 eval.first$Ta[eval.first$Ta<=0]<-1e-5
@@ -249,7 +244,7 @@ lines(seq(min(eval.first2$pai),
 
 
 
-MDtrts.poly<-readOGR("trt_MD_15_18.shp")
+MDtrts.poly<-readOGR("./data/trt_MD_15_18.shp")
 MDtrts<-MDtrts.poly@data
 
 #recentMD<-right_join(eval.all,MDtrts, by=c("Blockname" = "BLOCKNA"))
@@ -289,7 +284,7 @@ lrt(lm.MD, betareg(Ta ~ State + Dosage + DistanceKm + Acres + TreatYearFact + AF
 
 ## Recent years, Btk ------------------------------------------------------------------
 
-lethalTrts.poly<-readOGR("trt_lethal_15_18.shp")
+lethalTrts.poly<-readOGR("./data/trt_lethal_15_18.shp")
 lethalTrts<-lethalTrts.poly@data
 lethalTrts<-lethalTrts[,colnames(lethalTrts) %in% c("ID","STATE","BLOCKNA","hostba","L2_50","DATE_TR"
                                                     ,"prcp_p_","rh100","pai","trpctch_v","trpctch_m")]
@@ -319,11 +314,5 @@ lrt(lm.Btk, betareg(Ta ~ State + DistanceKm + Acres + L2diff + prcp_p_, data=eva
 lrt(lm.Btk, betareg(Ta ~ State + DistanceKm + Acres + TreatYearFact + prcp_p_, data=eval.Btk)) #test on L2 diff
 lrt(lm.Btk, betareg(Ta ~ State + DistanceKm + Acres + TreatYearFact + L2diff, data=eval.Btk)) #test on prcp
 
-## Follow-up treatments ---------------------------------------------------------------
 
-## how can we best use these? Maybe as more of a way to validate hypotheses?
-## Can ask if they are often successful
-
-eval.dups<-eval.all[duplicated(eval.all$stblk),]
-hist(eval.dups$Ta)
 
